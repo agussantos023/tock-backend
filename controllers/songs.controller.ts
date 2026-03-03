@@ -122,7 +122,7 @@ export const getSongFile = async (
     const song = await prisma.song.update({
       where: { id: Number(id) },
       data: {
-        [oppositeCol]: generateHexadecimalCode(33),
+        [oppositeCol]: generateHexadecimalCode(3),
       },
     });
 
@@ -144,8 +144,8 @@ export const getSongsPaged = async (
   const userId = req.userId;
 
   // Recogemos parámetros de la query con valores por defecto
-  const limit = parseInt(req.query.limit as string) || 40;
-  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.max(1, parseInt(req.query.limit as string) || 40);
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const skip = (page - 1) * limit;
 
   const { currentCol } = getShufflerConfig();
@@ -164,9 +164,7 @@ export const getSongsPaged = async (
         duration: true,
         file_size: true,
       },
-      orderBy: {
-        [currentCol]: "asc",
-      },
+      orderBy: [{ [currentCol]: "asc" }, { id: "asc" }],
     });
 
     const songsReady = songs.map((song) => ({
