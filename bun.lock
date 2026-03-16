@@ -5,6 +5,7 @@
     "": {
       "name": "tock-backend",
       "dependencies": {
+        "@faker-js/faker": "^10.3.0",
         "@prisma/client": "5.10.0",
         "@types/jsonwebtoken": "^9.0.10",
         "@types/multer": "^2.0.0",
@@ -31,6 +32,8 @@
     },
   },
   "packages": {
+    "@faker-js/faker": ["@faker-js/faker@10.3.0", "", {}, "sha512-It0Sne6P3szg7JIi6CgKbvTZoMjxBZhcv91ZrqrNuaZQfB5WoqYYbzCUOq89YR+VY8juY9M1vDWmDDa2TzfXCw=="],
+
     "@prisma/client": ["@prisma/client@5.10.0", "", { "peerDependencies": { "prisma": "*" }, "optionalPeers": ["prisma"] }, "sha512-JQqKYpKplsAaPDk0RVKBsN4ly6AWJys6Hkjh9PJMgtdY0IME1C0aHckyGUhHpenmOO2J6liPDDm1svSrzce8BQ=="],
 
     "@prisma/debug": ["@prisma/debug@5.10.0", "", {}, "sha512-xBs8M4bGIBUqJ/9lZM+joEJkrNaGPKMUcK3a5JqUDQtwPDaWDTq24wOpkHfoJtvNbmGtlDl9Ky5HAbctN5+x7g=="],

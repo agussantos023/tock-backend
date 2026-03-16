@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { seedSystem } from "./seeds/system.seed";
+import { seedSongs } from "./seeds/songs.seed";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,8 @@ async function main() {
 
   // Ejecución por módulos
   await seedSystem(prisma);
+
+  await seedSongs(prisma);
 
   console.log("🏁 Proceso completado.");
 }
