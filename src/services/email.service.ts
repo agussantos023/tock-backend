@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { generateHexadecimalCode } from "../utils/codes";
-import { prisma } from "../utils/db";
+import { prisma } from "../config/db";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

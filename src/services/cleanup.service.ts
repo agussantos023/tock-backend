@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { prisma } from "../utils/db";
+import { prisma } from "../config/db";
 
 export const CleanupService = {
   async initCleanupCron() {

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
-import app from "../app";
-import { prisma } from "../utils/db";
+import app from "app";
+import { prisma } from "config/db";
 
-vi.mock("../utils/db.ts", () => ({
+vi.mock("../src/config/db.ts", () => ({
   prisma: {
     systemConfig: {
       findUnique: vi.fn().mockResolvedValue({ is_login_blocked: false }),
