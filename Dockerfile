@@ -18,4 +18,4 @@ RUN bunx prisma generate
 EXPOSE 3000
 
 # En producción NO usamos --watch
-CMD ["bun", "index.ts"]
+CMD ["bun", "server.ts"]

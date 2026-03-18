@@ -8,6 +8,10 @@
     "jsx": "react-jsx",
     "allowJs": true,
     "types": ["bun"],
+    "rootDir": ".",
+    "paths": {
+      "*": ["./src/*"]
+    },
 
     // Bundler mode
     "moduleResolution": "bundler",

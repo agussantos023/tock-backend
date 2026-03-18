@@ -1,9 +1,14 @@
 {
   "name": "tock-backend",
   "version": "0.4.0",
-  "module": "index.ts",
+  "module": "server.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
   "prisma": {
     "seed": "bun prisma/seed.ts"
   },
@@ -13,7 +18,15 @@
     "@types/express": "^5.0.6",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/node-cron": "^3.0.11",
-    "prisma": "5.10.0"
+    "@types/supertest": "^7.2.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/ui": "4.1.0",
+    "prisma": "5.10.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.0",
+    "vitest-mock-extended": "^3.1.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -30,6 +43,8 @@
     "multer": "^2.0.2",
     "mysql2": "^3.16.2",
     "node-cron": "^4.2.1",
-    "resend": "^6.9.2"
+    "resend": "^6.9.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

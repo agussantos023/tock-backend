@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { prisma } from "../utils/db";
+import { prisma } from "../config/db";
 import { generateToken } from "../utils/jwt";
 import { EmailService } from "../services/email.service";
 import jwt from "jsonwebtoken";

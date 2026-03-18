@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { prisma } from "../utils/db";
+import { prisma } from "../config/db";
 
 // Bloqueo para Registro
 export const checkRegisterStatus = async (
