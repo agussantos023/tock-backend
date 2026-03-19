@@ -46,6 +46,9 @@ export const uploadSong = async (
     }
 
     // Preparar rutas
+    const isOpus =
+      file.mimetype === "audio/opus" || file.mimetype === "audio/ogg";
+
     const timestamp = Date.now();
     const salt = Math.round(Math.random() * 100);
     rawOpusPath = path.join("uploads", "temp", `raw-${timestamp}-${salt}.opus`);
@@ -58,9 +61,16 @@ export const uploadSong = async (
     const metadata = await AudioService.getMetadata(file.path);
     const tags = metadata.format.tags || {};
 
-    // Convertir a Opus
-    await AudioService.convertToOpus(file.path, rawOpusPath);
-    AudioService.deleteFile(file.path);
+    // 2. PIPELINE DINÁMICO
+    if (!isOpus) {
+      // Caso MP3: Convertimos a Opus
+      await AudioService.convertToOpus(file.path, rawOpusPath);
+      AudioService.deleteFile(file.path); // Borramos el MP3 original
+    } else {
+      // Caso Opus
+      // Simplemente renombramos/movemos para que el siguiente paso (stripMetadata) lo encuentre
+      fs.renameSync(file.path, rawOpusPath);
+    }
 
     // Limpieza de metadata
     await AudioService.stripMetadata(rawOpusPath, cleanOpusPath);
