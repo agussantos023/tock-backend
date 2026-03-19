@@ -7,6 +7,7 @@ import path from "path";
 import { generateHexadecimalCode } from "../utils/codes";
 import { AudioService } from "../services/audio.service";
 import { getShufflerConfig } from "../utils/shuffler";
+import { audioLimit } from "config/concurrency";
 
 export const uploadSong = async (
   req: Request,
@@ -58,22 +59,35 @@ export const uploadSong = async (
       `clean-${timestamp}-${salt}.opus`,
     );
 
-    const metadata = await AudioService.getMetadata(file.path);
+    if (!rawOpusPath || !cleanOpusPath) {
+      throw new Error("Error al generar las rutas de procesamiento");
+    }
+
+    const finalRawPath = rawOpusPath;
+    const finalCleanPath = cleanOpusPath;
+
+    const metadata = await audioLimit(() =>
+      AudioService.getMetadata(file.path),
+    );
     const tags = metadata.format.tags || {};
 
-    // 2. PIPELINE DINÁMICO
+    // PIPELINE DINÁMICO
     if (!isOpus) {
-      // Caso MP3: Convertimos a Opus
-      await AudioService.convertToOpus(file.path, rawOpusPath);
+      // Convertimos a Opus
+      await audioLimit(() =>
+        AudioService.convertToOpus(file.path, finalRawPath),
+      );
+
       AudioService.deleteFile(file.path); // Borramos el MP3 original
     } else {
-      // Caso Opus
-      // Simplemente renombramos/movemos para que el siguiente paso (stripMetadata) lo encuentre
+      // Simplemente renombramos para que el siguiente paso (stripMetadata) lo encuentre
       fs.renameSync(file.path, rawOpusPath);
     }
 
     // Limpieza de metadata
-    await AudioService.stripMetadata(rawOpusPath, cleanOpusPath);
+    await audioLimit(() =>
+      AudioService.stripMetadata(finalRawPath, finalCleanPath),
+    );
     AudioService.deleteFile(rawOpusPath);
 
     // Validacion de espacio
@@ -92,33 +106,48 @@ export const uploadSong = async (
     const finalPath = path.join("uploads", finalFileName);
     fs.renameSync(cleanOpusPath, finalPath);
 
-    const result = await prisma.$transaction(async (tx: any) => {
-      const song = await tx.song.create({
-        data: {
-          title: (title || tags.title || "Sin título").substring(0, 50),
-          artist: (tags.artist || "Artista desconocido").substring(0, 50),
-          album: (tags.album || "Single").substring(0, 50),
-          duration: Math.round(metadata.format.duration || 0),
-          year: tags.date ? parseInt(tags.date.substring(0, 4)) : null,
-          order_par: generateHexadecimalCode(3),
-          order_impar: generateHexadecimalCode(3),
-          file_path: finalPath,
-          file_size: finalSize,
-          user_id: userId,
-        },
-      });
+    const result = await prisma.$transaction(
+      async (tx: any) => {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { storage_used: true, storage_limit: true },
+        });
 
-      await tx.user.update({
-        where: { id: userId },
-        data: {
-          storage_used: {
-            increment: finalSize,
+        if (!user || user.storage_used + finalSize > user.storage_limit) {
+          throw new Error("STORAGE_FULL");
+        }
+
+        const song = await tx.song.create({
+          data: {
+            title: (title || tags.title || "Sin título").substring(0, 50),
+            artist: (tags.artist || "Artista desconocido").substring(0, 50),
+            album: (tags.album || "Single").substring(0, 50),
+            duration: Math.round(metadata.format.duration || 0),
+            year: tags.date ? parseInt(tags.date.substring(0, 4)) : null,
+            order_par: generateHexadecimalCode(3),
+            order_impar: generateHexadecimalCode(3),
+            file_path: finalPath,
+            file_size: finalSize,
+            user_id: userId,
           },
-        },
-      });
+        });
 
-      return song;
-    });
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            storage_used: {
+              increment: finalSize,
+            },
+          },
+        });
+
+        return song;
+      },
+      {
+        maxWait: 5000, // Espera hasta 5s para entrar en la transacción
+        timeout: 10000, // 10s de tiempo total
+      },
+    );
 
     return res.status(201).json(result);
   } catch (error) {

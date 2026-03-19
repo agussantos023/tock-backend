@@ -19,6 +19,7 @@ export const AudioService = {
     return new Promise((resolve, reject) => {
       ffmpeg(input)
         .toFormat("opus")
+        .outputOptions("-threads 1") // Forzamos un solo hilo
         .on("end", () => resolve())
         .on("error", (err: Error) =>
           reject(new Error(`Error en conversión: ${err.message}`)),

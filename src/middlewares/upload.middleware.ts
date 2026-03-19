@@ -6,9 +6,10 @@ const uploadDir = "uploads";
 const tempDir = path.join("uploads", "temp");
 
 const ALLOWED_MIMETYPES = [
-  "audio/mpeg", // .mp3
+  "audio/mpeg", // Para .mp3
+  "audio/mp3", // Algunos sistemas lo envían así
   "audio/opus", // .opus
-  "audio/ogg", // .opus/ogg
+  "audio/ogg", // .opus dentro de ogg
 ];
 
 // Crear carpeta upload si no existe (evita crash al inicio)
@@ -32,7 +33,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
   if (ALLOWED_MIMETYPES.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Solo se permiten archivos mp3"), false);
+    cb(new Error("Solo se permiten archivos mp3 y opus"), false);
   }
 };
 
