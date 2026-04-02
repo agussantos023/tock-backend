@@ -1,25 +1,15 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-// Se extiende la interfaz de Request para incluir userId
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: number;
-    }
-  }
-}
-
 export const authenticateToken = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): any => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = req.cookies.auth_token;
 
   if (!token) {
-    return res.status(401).json({ error: "Acceso denegado. Falta el token." });
+    return res.status(401).json({ message: "No autorizado: Token ausente" });
   }
 
   try {
@@ -31,6 +21,7 @@ export const authenticateToken = (
 
     next();
   } catch (error) {
-    return res.status(403).json({ error: "Token inválido o expirado" });
+    res.clearCookie("auth_token");
+    return res.status(403).json({ message: "Token inválido o expirado" });
   }
 };

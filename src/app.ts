@@ -3,6 +3,7 @@ import router from "./routes/routes";
 import cors from "cors";
 import { CleanupService } from "./services/cleanup.service";
 import { setupSwagger } from "./config/swagger";
+import cookieParser from "cookie-parser";
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -16,6 +17,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(cookieParser());
 
 app.use(express.json());
 

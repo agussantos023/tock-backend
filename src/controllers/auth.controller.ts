@@ -72,9 +72,10 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
     const token = generateToken(user.id);
 
+    setAuthCookie(res, token);
+
     return res.status(200).json({
       message: "Login exitoso",
-      token,
       isVerified: user.is_verified,
       user: {
         id: user.id,
@@ -86,6 +87,17 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     console.error(error);
     res.status(500).json({ message: "Error al iniciar sesion" });
   }
+};
+
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+  });
+
+  return res.status(200).json({ message: "Sesión cerrada" });
 };
 
 export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
@@ -161,8 +173,7 @@ export const resendOtp = async (req: Request, res: Response): Promise<any> => {
 
 export const checkAuth = async (req: Request, res: Response): Promise<any> => {
   try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = req.cookies.auth_token;
 
     if (!token) return res.status(200).json({ status: "unauthenticated" });
 
@@ -195,4 +206,14 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json({ status: "unauthenticated" });
   }
+};
+
+const setAuthCookie = (res: Response, token: string) => {
+  res.cookie("auth_token", token, {
+    httpOnly: true, // Inaccesible para JS
+    secure: process.env.NODE_ENV === "production", // HTTPS en producción
+    sameSite: "lax", // Protección contra CSRF
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/", // Disponible en toda la app
+  });
 };
