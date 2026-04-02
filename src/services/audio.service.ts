@@ -1,6 +1,6 @@
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
-import type { AudioMetadata } from "../types/audio";
+import type { AudioMetadata } from "../interfaces/audio.interface";
 
 export const AudioService = {
   // Extraer metadatos

@@ -47,7 +47,7 @@ model Song {
   file_size     BigInt
   created_at    DateTime @default(now())
 
-  user          User     @relation(fields: [user_id], references: [id])
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id       Int
 
   @@index([user_id, order_par])
