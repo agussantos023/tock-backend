@@ -9,12 +9,6 @@ export const register = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email y contraseña son obligatorios" });
-    }
-
     const existUser = await prisma.user.findUnique({ where: { email } });
 
     if (existUser) {
@@ -55,12 +49,6 @@ export const login = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email y contraseña son obligatorios" });
-    }
-
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(400).json({ message: "Usuario no encontrado" });
@@ -91,11 +79,6 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  const userId = req.userId as number;
-
-  if (!userId)
-    return res.status(400).json({ message: "No se encuentra Sesión iniciada" });
-
   res.clearCookie("auth_token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -111,7 +94,6 @@ export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
     const { otpCode } = req.body;
     const userId = req.userId as number;
 
-    // Buscar al usuario
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -136,7 +118,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
     }
 
     // Validar el código
-    if (user.otp_code !== otpCode.toUpperCase()) {
+    if (user.otp_code !== otpCode) {
       return res.status(400).json({ message: "Código no válido" });
     }
 
@@ -229,16 +211,11 @@ export const deleteAccount = async (
 ): Promise<any> => {
   try {
     const userId = req.userId as number;
-    console.log("id usuarioooo:", userId);
 
     const songs = await prisma.song.findMany({
       where: { user_id: userId },
       select: { file_path: true },
     });
-
-    console.log(
-      `[CLEANUP] Borrando ${songs.length} archivos para el usuario ${userId}`,
-    );
 
     for (const song of songs) {
       AudioService.deleteFile(song.file_path);
