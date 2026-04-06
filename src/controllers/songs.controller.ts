@@ -139,16 +139,22 @@ export const uploadSong = async (
           },
         });
 
-        await tx.user.update({
+        const updatedUser = await tx.user.update({
           where: { id: userId },
           data: {
             storage_used: {
               increment: finalSize,
             },
           },
+          select: { storage_used: true },
         });
 
-        return song;
+        return {
+          song,
+          storage: {
+            used: updatedUser.storage_used.toString(),
+          },
+        };
       },
       {
         maxWait: 5000, // Espera hasta 5s para entrar en la transacción
