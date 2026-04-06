@@ -8,6 +8,7 @@ import { generateHexadecimalCode } from "../utils/codes";
 import { AudioService } from "../services/audio.service";
 import { getShufflerConfig } from "../utils/shuffler";
 import { audioLimit } from "config/concurrency";
+import type { DeleteSongsRequest } from "interfaces/song.interface";
 
 export const uploadSong = async (
   req: Request,
@@ -138,16 +139,22 @@ export const uploadSong = async (
           },
         });
 
-        await tx.user.update({
+        const updatedUser = await tx.user.update({
           where: { id: userId },
           data: {
             storage_used: {
               increment: finalSize,
             },
           },
+          select: { storage_used: true },
         });
 
-        return song;
+        return {
+          song,
+          storage: {
+            used: updatedUser.storage_used.toString(),
+          },
+        };
       },
       {
         maxWait: 5000, // Espera hasta 5s para entrar en la transacción
@@ -244,48 +251,69 @@ export const getSongsPaged = async (
 };
 
 export const deleteSong = async (req: Request, res: Response): Promise<any> => {
-  const { id } = req.params;
+  const { ids } = req.body as DeleteSongsRequest;
   const userId = req.userId;
 
   try {
-    const song = await prisma.song.findUnique({
-      where: { id: Number(id) },
+    // Definir qué canciones vamos a borrar
+    const whereCondition: any = { user_id: userId };
+
+    if (ids !== "all") whereCondition.id = { in: ids.map(Number) };
+
+    const songsToDelete = await prisma.song.findMany({
+      where: whereCondition,
     });
 
-    if (!song) return res.status(404).json({ error: "Canción no encontrada" });
-
-    // Verificar que la canción pertenece al usuario que la quiere borrar
-    if (song.user_id !== userId) {
+    if (songsToDelete.length === 0) {
       return res
-        .status(403)
-        .json({ error: "No tienes permiso para borrar esta canción" });
+        .status(404)
+        .json({ message: "No se encontraron canciones para eliminar" });
     }
 
-    // Borrar el archivo físico del disco
-    const absolutePath = path.join(process.cwd(), song.file_path);
-    if (fs.existsSync(absolutePath)) {
-      fs.unlinkSync(absolutePath);
+    // Borrar archivos físicos
+    for (const song of songsToDelete) {
+      const absolutePath = path.join(process.cwd(), song.file_path);
+
+      AudioService.deleteFile(absolutePath);
     }
 
-    await prisma.$transaction(async (tx: any) => {
-      await tx.song.delete({
-        where: { id: Number(id) },
-      });
+    const totalSizeToDecrement = songsToDelete.reduce(
+      (acc, s) => acc + BigInt(s.file_size),
+      0n, // El '0n' indica que el acumulador inicial es un BigInt
+    );
 
-      await tx.user.update({
+    const updatedUser = await prisma.$transaction(async (tx: any) => {
+      await tx.song.deleteMany({ where: whereCondition });
+
+      return await tx.user.update({
         where: { id: userId },
         data: {
-          storage_used: {
-            decrement: song.file_size,
-          },
+          storage_used: { decrement: totalSizeToDecrement },
+        },
+        select: {
+          storage_used: true,
+          storage_limit: true,
         },
       });
     });
 
-    return res.json({ message: "Canción eliminada correctamente" });
+    return res.json({
+      message:
+        ids === "all"
+          ? "Todas las canciones eliminadas"
+          : "Canciones eliminadas",
+      count: songsToDelete.length,
+      storage: {
+        used: updatedUser.storage_used.toString(),
+        limit: updatedUser.storage_limit.toString(),
+        available: (
+          updatedUser.storage_limit - updatedUser.storage_used
+        ).toString(),
+      },
+    });
   } catch (error) {
-    console.error("Error eliminando canción:", error);
-    return res.status(500).json({ error: "Error al eliminar la canción" });
+    console.error("Error eliminando canciones:", error);
+    return res.status(500).json({ error: "Error al eliminar las canciones" });
   }
 };
 

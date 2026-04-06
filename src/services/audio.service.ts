@@ -1,6 +1,7 @@
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
 import type { AudioMetadata } from "../interfaces/audio.interface";
+import path from "path";
 
 export const AudioService = {
   // Extraer metadatos
@@ -60,12 +61,18 @@ export const AudioService = {
   },
 
   deleteFile(filePath: string | null): void {
-    if (filePath && fs.existsSync(filePath)) {
-      try {
-        fs.unlinkSync(filePath);
-      } catch (e) {
-        console.warn(`[FILE_SYSTEM] No se pudo borrar: ${filePath}`);
+    if (!filePath) return;
+
+    try {
+      const absolutePath = path.isAbsolute(filePath)
+        ? filePath
+        : path.join(process.cwd(), filePath);
+
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
       }
+    } catch (e) {
+      console.warn(`[FILE_SYSTEM] No se pudo borrar: ${filePath}`, e);
     }
   },
 };

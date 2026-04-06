@@ -31,12 +31,13 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     setAuthCookie(res, token);
 
     return res.status(200).json({
-      message: "Register exitoso",
-      isVerified: newUser.is_verified,
+      message: "Registro exitoso",
+      status: "unverified",
       user: {
         id: newUser.id,
         email: newUser.email,
         storage_limit: newUser.storage_limit.toString(),
+        storage_used: newUser.storage_used.toString(),
       },
     });
   } catch (error) {
@@ -50,9 +51,9 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     const { email, password } = req.body;
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
+
+    if (!user)
       return res.status(400).json({ message: "Usuario no encontrado" });
-    }
 
     const isPasswordValid = await Bun.password.verify(password, user.password);
     if (!isPasswordValid) {
@@ -65,10 +66,11 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json({
       message: "Login exitoso",
-      isVerified: user.is_verified,
+      status: user.is_verified ? "authenticated" : "unverified",
       user: {
         id: user.id,
         email: user.email,
+        storage_used: user.storage_used.toString(),
         storage_limit: user.storage_limit.toString(),
       },
     });
@@ -131,7 +133,12 @@ export const verifyOtp = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    return res.status(200).json({ message: "Cuenta verificada con éxito" });
+    return res
+      .status(200)
+      .json({
+        message: "Cuenta verificada con éxito",
+        status: "authenticated",
+      });
   } catch (error) {
     res
       .status(500)
@@ -179,6 +186,7 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
+        id: true,
         is_verified: true,
         email: true,
         storage_used: true,

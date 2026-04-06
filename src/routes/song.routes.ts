@@ -16,7 +16,7 @@ songRouter.use(authenticateToken);
 songRouter.post("/", upload.single("file"), uploadSong);
 songRouter.get("/:id/audio", getSongFile);
 songRouter.get("/", getSongsPaged);
-songRouter.delete("/:id", deleteSong);
+songRouter.delete("/", deleteSong);
 songRouter.post("/shuffle", shuffleListNow);
 
 export default songRouter;
