@@ -40,6 +40,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       RESEND_API_KEY: ${RESEND_API_KEY}
       PORT: 3000
@@ -54,7 +55,11 @@ services:
         condition: service_healthy
     networks:
       - tock-network
-    command: sh -c "bunx prisma generate && bun --watch server.ts"
+    command: >
+      sh -c "bun install && 
+             bunx prisma generate && 
+             bunx prisma db push && 
+             bun --watch server.ts"
 
   frontend:
     build:

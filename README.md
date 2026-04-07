@@ -1,69 +1,69 @@
-# tock-backend
+# 🎵 Tock Music Stack
 
-Este es el punto de entrada principal para la aplicación Tock Music. Contiene la API y la configuración `docker-compose` para orquestar el full stack (Frontend, Backend y Base de Datos).
+Sistema de streaming de música personal construido con Bun, Angular 19 y MySQL. Incluye transcodificación automática a Opus, gestión de almacenamiento y seguridad basada en OTP.
 
-## 📂 Estructura del Proyecto (Necesaria para Docker)
+# 📂 Estructura del Proyecto (Requisito Docker)
 
-Para que la configuración de Docker funcione, ambos repositorios deben ser carpetas hermanas en tu espacio de trabajo:
+Para que la orquestación funcione, los repositorios deben ser carpetas hermanas. El docker-compose reside en el backend pero construye ambos:
+Plaintext
 
-```text
-workspace/
-├── tock-backend/   <-- Contiene docker-compose.yml
-└── tock-frontend/  <-- El repositorio del frontend
-```
+tu-espacio-de-trabajo/
+├── tock-backend/ # Contiene el orquestador (docker-compose.yml)
+└── tock-frontend/ # Repositorio de la interfaz de usuario
 
-## 🚀 Configuración Full Stack (Docker)
+🚀 Instalación Rápida (One-Click Start)
 
-### 1. Configuración
+1. Preparar Variables de Entorno
 
-Crea un archivo `.env` en la raíz del `tock-backend`. Usa este template:
+Crea el archivo .env en la raíz de tock-backend (puedes copiar el .env.example):
+Bash
 
-```plaintext
-# Configuración de la Base de Datos
-DB_ROOT_PASSWORD=change_this_password
+# Contraseñas de Base de Datos
+
+DB_ROOT_PASSWORD=tock_root_secure
 DB_NAME=tock_music_db
 DB_USER=tock_user
-DB_PASSWORD=change_this_user_password
+DB_PASSWORD=tock_user_password
 
-# Seguridad JWT
-JWT_SECRET=change_this_to_a_secure_random_string
+# URL para Prisma (Apunta al servicio del contenedor)
 
-# Conexión a Prisma (Red Interna Docker)
-DATABASE_URL="mysql://root:change_this_password@tock_mysql_server:3306/tock_music_db"
-```
+DATABASE_URL="mysql://root:tock_root_secure@mysql-db:3306/tock_music_db"
 
-### 2. Ejecución del Proyecto
+# Seguridad
 
-Navega al directorio `tock-backend` y ejecuta:
+JWT_SECRET=tu_secreto_aleatorio_aqui
 
-```bash
+# Servicios Externos
+
+RESEND_API_KEY=re_123456789 # Consigue una en resend.com
+
+2. Levantar el Stack
+
+Desde la carpeta tock-backend, ejecuta:
+Bash
+
 docker compose up --build
-```
 
-Esto construirá las imágenes de frontend y backend y iniciará la base de datos MySQL.
+¿Qué hace este comando automáticamente?
 
-### 3. Inicialización de la Base de Datos
+    Levanta un servidor MySQL 8.4.
 
-Una vez que los contenedores estén en ejecución, abre un nuevo terminal en esta carpeta y ejecuta las migraciones de Prisma:
+    Compila el Backend con soporte para ffmpeg.
 
-```bash
-docker exec -it tock_bun_backend bunx prisma db push
-```
+    Ejecuta prisma db push para crear las tablas y prisma db seed para los datos iniciales.
 
-La aplicación ahora está ejecutándose en `http://localhost:4200`.
+    Levanta el Frontend en modo desarrollo con Hot Reload.
 
-## 🛠 Desarrollo Local Manual (Sin Docker)
+# 🔗 Accesos Directos
 
-### Instalación de Dependencias
+    Frontend: http://localhost:4200
 
-```bash
-bun install
-```
+    API Backend: http://localhost:3000
 
-### Ejecución
+# 💡 Notas para Desarrolladores
 
-```bash
-bun run index.ts
-```
+    CORS: El backend está preconfigurado para aceptar peticiones desde http://localhost:4200 con credentials: true.
 
-### Este proyecto fue creado usando `bun init` en bun v1.3.8. Bun es un entorno de ejecución JavaScript rápido y todo-en-uno.
+    Uploads: Los archivos se guardan en el volumen persistente ./uploads en el backend. No se borran al apagar los contenedores.
+
+    Transcodificación: Cualquier audio subido se convierte automáticamente a .opus mediante ffmpeg dentro del contenedor de Node/Bun para ahorrar espacio.
