@@ -2,14 +2,13 @@ import { Resend } from "resend";
 import { generateHexadecimalCode } from "../utils/codes";
 import { prisma } from "../config/db";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const EmailService = {
+  _resend: new Resend(process.env.RESEND_API_KEY),
   async sendVerificationCode(userId: number, email: string) {
     const otpCode = generateHexadecimalCode(4);
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this._resend.emails.send({
         from: "Tock Music <onboardin@resend.dev>",
         to: email,
         subject: `Tu código de verificación es ${otpCode}`,

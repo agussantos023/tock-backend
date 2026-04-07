@@ -68,7 +68,7 @@ describe("Songs Controller - uploadSong", () => {
 
     (prisma.user.findUnique as any).mockResolvedValue({
       storage_limit: BigInt(1000),
-      storage_used: BigInt(999), // Solo 1 byte libre
+      storage_used: BigInt(999),
     });
 
     await uploadSong(mockReq, mockRes);
