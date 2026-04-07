@@ -23,7 +23,6 @@ describe("POST /auth/login", () => {
     const response = await request(app).post("/api/auth/login").send({});
 
     expect(response.status).toBe(400);
-    // Sincronizado con tu validate.middleware:
     expect(response.body.message).toBe("Error de validación");
   });
 
@@ -62,7 +61,7 @@ describe("POST /auth/login", () => {
     expect(response.body.message).toBe("Login exitoso");
     expect(response.body.status).toBe("authenticated");
 
-    // IMPORTANTE: Como usas cookies, verificamos la cabecera set-cookie
+    // verificamos la cabecera set-cookie
     const cookies = response.get("Set-Cookie")?.join("");
     expect(cookies).toContain("auth_token=");
 
@@ -87,7 +86,6 @@ describe("POST /auth/login", () => {
     });
 
     expect(response.status).toBe(401);
-    // Cambiado de .error a .message para que coincida con tu controlador
     expect(response.body.message).toBe("Credenciales inválidas");
   });
 });
