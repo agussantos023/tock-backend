@@ -6,6 +6,7 @@ export const CleanupService = {
     cron.schedule("0 0 * * *", async () => {
       console.log("--- Iniciando tareas de mantenimiento de media noche ---");
       await this.cleanupUnverifiedUsers();
+      await this.cleanupInactiveUsers();
       await this.resetSystemConfig();
     });
   },
@@ -21,6 +22,18 @@ export const CleanupService = {
       },
     });
     console.log(`🧹 Usuarios limpiados: ${deleted.count}`);
+  },
+
+  async cleanupInactiveUsers() {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const deleted = await prisma.user.deleteMany({
+      where: {
+        last_active_at: { lt: twoWeeksAgo },
+      },
+    });
+    console.log(`🧹 Cuentas inactivas eliminadas: ${deleted.count}`);
   },
 
   async resetSystemConfig() {

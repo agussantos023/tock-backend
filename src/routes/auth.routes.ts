@@ -3,10 +3,12 @@ import { authenticateToken } from "../middlewares/auth.middleware";
 import {
   checkLoginStatus,
   checkRegisterStatus,
+  checkUserLimit,
 } from "../middlewares/config.middleware";
 import {
   checkAuth,
   deleteAccount,
+  getRegistrationStatus,
   login,
   logout,
   register,
@@ -18,9 +20,12 @@ import { loginSchema, otpSchema, registerSchema } from "schemas/auth.schema";
 
 const authRoutes = Router();
 
+authRoutes.get("/registration-status", getRegistrationStatus);
+
 authRoutes.post(
   "/register",
   checkRegisterStatus,
+  checkUserLimit,
   validate(registerSchema),
   register,
 );

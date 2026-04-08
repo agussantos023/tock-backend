@@ -196,6 +196,11 @@ export const checkAuth = async (req: Request, res: Response): Promise<any> => {
       return res.status(200).json({ status: "unauthenticated" });
     }
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { last_active_at: new Date() },
+    });
+
     return res.status(200).json({
       status: user.is_verified ? "authenticated" : "unverified",
       user: {
@@ -256,4 +261,26 @@ const setAuthCookie = (res: Response, token: string) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: "/", // Disponible en toda la app
   });
+};
+
+export const getRegistrationStatus = async (
+  _req: Request,
+  res: Response,
+): Promise<any> => {
+  try {
+    const [config, userCount] = await Promise.all([
+      prisma.systemConfig.findUnique({ where: { id: 1 } }),
+      prisma.user.count(),
+    ]);
+
+    const isAvailable = !config?.is_register_blocked && userCount < 410;
+
+    return res.status(200).json({
+      available: isAvailable,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Error al obtener el estado del registro" });
+  }
 };

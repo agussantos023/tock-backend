@@ -34,3 +34,20 @@ export const checkLoginStatus = async (
 
   next();
 };
+
+export const checkUserLimit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const userCount = await prisma.user.count();
+
+  if (userCount >= 410) {
+    return res.status(403).json({
+      message:
+        "Límite de usuarios alcanzado. No es posible crear más cuentas por ahora.",
+    });
+  }
+
+  next();
+};
