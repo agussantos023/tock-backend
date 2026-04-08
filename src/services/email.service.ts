@@ -9,7 +9,7 @@ export const EmailService = {
 
     try {
       const { data, error } = await this._resend.emails.send({
-        from: "Tock Music <onboardin@resend.dev>",
+        from: "Tock Music <onboardin@agussantos.dev>",
         to: email,
         subject: `Tu código de verificación es ${otpCode}`,
         html: `tu código es: ${otpCode}`,
